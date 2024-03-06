@@ -22,18 +22,26 @@ export class CdkStack extends cdk.Stack {
       functionName: "consumer-function",
       manifestPath: path.join(__dirname, "../../lambda/Cargo.toml"),
       runtime: "provided.al2023",
-      timeout: Duration.seconds(15)
+      timeout: Duration.seconds(5)
     });
 
     const queue = new sqs.Queue(this, 'CdkQueue', {
       queueName: "test-queue.fifo",
-      visibilityTimeout: cdk.Duration.seconds(300),
+      visibilityTimeout: cdk.Duration.seconds(7),
+      deadLetterQueue: {
+        maxReceiveCount: 3,
+        queue: new sqs.Queue(this, "DLQ", {
+          queueName: "test-dead-queue.fifo",
+          fifo: true
+        })
+      },
       fifo: true
     });
 
     consumerFunction.addEventSource(new SqsEventSource(queue, {
       batchSize: 1,
-      maxConcurrency: 5
+      maxConcurrency: 5,
+      reportBatchItemFailures: true
     }))
 
     queue.grant(producerFunction, "sqs:SendMessage");

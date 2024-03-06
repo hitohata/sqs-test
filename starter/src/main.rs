@@ -31,8 +31,10 @@ struct Message {
 
 async fn send_queue(client: &Client, url: &String, id: usize) -> Result<(), Error> {
 
+    let new_id = id % 5;
+
     let message = Message {
-        id,
+        id: new_id,
         message: format!("message from: {:?}", id)
     };
 
@@ -43,7 +45,7 @@ async fn send_queue(client: &Client, url: &String, id: usize) -> Result<(), Erro
         .queue_url(url)
         .message_body(serde_json::to_string(&message)?)
         .message_deduplication_id(format!("{}", uuid))
-        .message_group_id(format!("{}", uuid))
+        .message_group_id(format!("{}", new_id))
         .send()
         .await?;
 

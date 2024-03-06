@@ -1,7 +1,7 @@
 use aws_lambda_events::event::sqs::SqsEvent;
 use aws_lambda_events::sqs::{BatchItemFailure, SqsBatchResponse};
 use lambda_runtime::{run, service_fn, tracing, Error, LambdaEvent};
-
+use rand::Rng;
 
 /// This is the main body for the function.
 /// Write your code inside it.
@@ -11,7 +11,10 @@ use lambda_runtime::{run, service_fn, tracing, Error, LambdaEvent};
 async fn function_handler(event: LambdaEvent<SqsEvent>) -> Result<SqsBatchResponse, Error> {
     // Extract some useful information from the request
 
+    println!("{:?}", event.payload);
+
     let mut batch_item_failures = Vec::new();
+    let mut rng = rand::thread_rng();
 
     if event.payload.records.len() > 1 {
         for item in &event.payload.records {
@@ -21,9 +24,26 @@ async fn function_handler(event: LambdaEvent<SqsEvent>) -> Result<SqsBatchRespon
         }
     }
 
-    println!("{:?}", event.payload.records[0].body);
+    for item in &event.payload.records {
+        match &item.message_id {
+            Some(id) => {
+                let rand_val = rng.gen_range(0..10);
+                println!("{:?}", item.body);
+                if rand_val >= 6 {
+                } else {
+                    println!("[ERROR]: {:?}", id.to_owned());
+                    batch_item_failures.push(BatchItemFailure {
+                        item_identifier: id.to_owned()
+                    })
+                }
+            },
+            None =>  {
+                panic!("ID!")
+            }
+        }
+    }
 
-    tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
+    println!("{:?}", batch_item_failures);
 
     Ok(SqsBatchResponse {
         batch_item_failures
