@@ -3,8 +3,8 @@ import { Construct } from 'constructs';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { RustFunction } from "cargo-lambda-cdk";
 import * as path from "node:path";
-import {Duration} from "aws-cdk-lib";
-import {SqsEventSource} from "aws-cdk-lib/aws-lambda-event-sources";
+import { Duration } from "aws-cdk-lib";
+import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -25,15 +25,17 @@ export class CdkStack extends cdk.Stack {
       timeout: Duration.seconds(5)
     });
 
+    const deadLetterQueue = new sqs.Queue(this, "DLQ", {
+      queueName: "test-dead-queue.fifo",
+      fifo: true,
+    });
+
     const queue = new sqs.Queue(this, 'CdkQueue', {
       queueName: "test-queue.fifo",
       visibilityTimeout: cdk.Duration.seconds(7),
       deadLetterQueue: {
         maxReceiveCount: 3,
-        queue: new sqs.Queue(this, "DLQ", {
-          queueName: "test-dead-queue.fifo",
-          fifo: true
-        })
+        queue: deadLetterQueue
       },
       fifo: true
     });
