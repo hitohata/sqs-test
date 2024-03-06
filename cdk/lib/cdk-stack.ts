@@ -14,13 +14,13 @@ export class CdkStack extends cdk.Stack {
 
     const producerFunction = new RustFunction(this, "Producer", {
       functionName: "producer-function",
-      manifestPath: path.join(__dirname, "../../starter/Cargo.toml"),
+      manifestPath: path.join(__dirname, "../../lambdas/starter/Cargo.toml"),
       runtime: "provided.al2023",
     })
 
     const consumerFunction = new RustFunction(this, "Consumer", {
       functionName: "consumer-function",
-      manifestPath: path.join(__dirname, "../../lambda/Cargo.toml"),
+      manifestPath: path.join(__dirname, "../../lambdas/consumer/Cargo.toml"),
       runtime: "provided.al2023",
       timeout: Duration.seconds(5)
     });
