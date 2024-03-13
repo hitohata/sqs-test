@@ -29,7 +29,7 @@ async fn function_handler(event: LambdaEvent<SqsEvent>) -> Result<SqsBatchRespon
             Some(id) => {
                 let rand_val = rng.gen_range(0..10);
                 println!("{:?}", item.body);
-                if rand_val >= 6 {
+                if rand_val >= 9 {
                 } else {
                     println!("[ERROR]: {:?}", id.to_owned());
                     batch_item_failures.push(BatchItemFailure {

@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { RustFunction } from "cargo-lambda-cdk";
 import * as path from "node:path";
 import { Duration } from "aws-cdk-lib";
@@ -48,6 +49,21 @@ export class CdkStack extends cdk.Stack {
 
     queue.grant(producerFunction, "sqs:SendMessage");
     producerFunction.addEnvironment("URL", queue.queueUrl);
-  }
 
+    const deadLetterFunction = new RustFunction(this, "DeadLetterConsumer", {
+      functionName: "dead-letter-function",
+      manifestPath: path.join(__dirname, "../../lambdas/dead-letter-consumer/Cargo.toml"),
+      runtime: "provided.al2023",
+      timeout: Duration.seconds(5)
+    });
+
+    deadLetterFunction.addToRolePolicy(new iam.PolicyStatement({
+      actions: ["events:PutEvents"],
+      resources: [`arn:aws:events:${this.region}:${this.account}:*`]
+    }));
+
+    deadLetterFunction.addEventSource(new SqsEventSource(deadLetterQueue, {
+      reportBatchItemFailures: true
+    }))
+  }
 }
