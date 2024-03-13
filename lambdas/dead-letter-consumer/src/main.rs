@@ -28,6 +28,7 @@ async fn function_handler(event: LambdaEvent<SqsEvent>) -> Result<(), Error> {
         .map(|payload| {
             PutEventsRequestEntry::builder()
                 .set_detail(Some(payload))
+                .event_bus_name("notification-bus".to_string())
                 .source("notification.discord.dead-letter")
                 .detail_type(String::from("Discord"))
                 .build()

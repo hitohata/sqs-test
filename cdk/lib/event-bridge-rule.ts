@@ -19,12 +19,17 @@ export class SQSBridgeRule extends Stack {
 
         discordClient.addEnvironment("URI", uri);
 
+        const bus = new events.EventBus(this, "EventBus", {
+            eventBusName: "notification-bus"
+        })
+
         new events.Rule(this, "SQSBridgeRule", {
             eventPattern: {
                 source: ["notification.discord.dead-letter"],
                 detailType: ["Discord"],
             },
-            targets: [new aws_events_targets.LambdaFunction(discordClient)]
+            targets: [new aws_events_targets.LambdaFunction(discordClient)],
+            eventBus: bus
         });
     }
 }
