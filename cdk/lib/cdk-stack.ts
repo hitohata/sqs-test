@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import { RustFunction } from "cargo-lambda-cdk";
 import * as path from "node:path";
 import { Duration } from "aws-cdk-lib";
@@ -23,8 +24,20 @@ export class CdkStack extends cdk.Stack {
       functionName: "consumer-function",
       manifestPath: path.join(__dirname, "../../lambdas/consumer/Cargo.toml"),
       runtime: "provided.al2023",
-      timeout: Duration.seconds(5)
+      timeout: Duration.seconds(1)
     });
+
+    if (consumerFunction.timeout) {
+      new cloudwatch.Alarm(this, "TimeoutAlarm", {
+        metric: consumerFunction.metricDuration(),
+        threshold: consumerFunction.timeout.toSeconds(),
+        evaluationPeriods: 1,
+        datapointsToAlarm: 1,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+        alarmName: "ConsumerFunctionTimeout",
+        alarmDescription: "Consumer function timeout"
+      })
+    }
 
     const deadLetterQueue = new sqs.Queue(this, "DLQ", {
       queueName: "test-dead-queue.fifo",

@@ -13,6 +13,8 @@ async fn function_handler(event: LambdaEvent<SqsEvent>) -> Result<SqsBatchRespon
 
     println!("{:?}", event.payload);
 
+    std::thread::sleep(std::time::Duration::from_secs(2));
+
     let mut batch_item_failures = Vec::new();
     let mut rng = rand::thread_rng();
 
